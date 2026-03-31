@@ -72,6 +72,14 @@ NERC-Env simulates two real-world emergency scenarios:
 | `/grader` | POST | Get episode score |
 | `/baseline` | POST | Run baseline agent |
 
+## Testing
+```bash
+pip install pytest
+pytest test_env.py -v
+```
+
+All 27 tests pass covering reset(), step(), state(), grader, reward signals, and task validation.
+
 ## Setup
 ```bash
 docker build -t nerc-env .
