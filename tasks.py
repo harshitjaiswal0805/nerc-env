@@ -104,6 +104,7 @@ TASKS = {
             {"id": "r1", "status": "available"},
             {"id": "r2", "status": "available"},
             {"id": "r3", "status": "available"},
+            {"id": "r4", "status": "available"},
         ],
     },
 }

@@ -100,9 +100,9 @@ class NERCEnv:
             if team and team.status == RescueTeamStatus.available:
                 team.status = RescueTeamStatus.deployed
                 team.assigned_location = action.location
-                # rescue unassigned patients at that location
+                # rescue all unrescued patients
                 for p in s.patients:
-                    if not p.rescued and not p.assigned_hospital:
+                    if not p.rescued:
                         p.rescued = True
 
         elif action.action_type == "prioritize_patient":
