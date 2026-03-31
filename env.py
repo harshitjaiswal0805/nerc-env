@@ -121,8 +121,8 @@ class NERCEnv:
                 # Critical patients die after 5 steps without care
                 if patient.severity == PatientSeverity.critical and patient.steps_without_care >= 5:
                     patient.alive = False
-                # Moderate patients die after 14 steps without care
-                elif patient.severity == PatientSeverity.moderate and patient.steps_without_care >= 14:
+                # Moderate patients die after 16 steps without care
+                elif patient.severity == PatientSeverity.moderate and patient.steps_without_care >= 16:
                     patient.alive = False
                 # Mild patients die after 20 steps without care
                 elif patient.severity == PatientSeverity.mild and patient.steps_without_care >= 20:
