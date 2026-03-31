@@ -37,7 +37,7 @@ class StepRequest(BaseModel):
 def root():
     return {
         "name": "NERC-Env",
-        "version": "1.1.0",
+        "version": "1.0.0",
         "description": "National Emergency Response & Care Environment",
         "endpoints": ["/reset", "/step", "/state", "/tasks", "/grader", "/baseline"]
     }

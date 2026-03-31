@@ -68,7 +68,7 @@ TASKS = {
     # ICU capacity is deliberately tight to force smart allocation
     "task_3": {
         "mode": Mode.disaster,
-        "time_limit": 25,
+        "time_limit": 30,
         "description": "Earthquake with 10 casualties. Rescue, triage and allocate under tight capacity.",
         "difficulty": "hard",
         "patients": [
