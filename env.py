@@ -123,6 +123,9 @@ class NERCEnv:
                 # Moderate patients die after 10 steps without care
                 elif patient.severity == PatientSeverity.moderate and patient.steps_without_care >= 10:
                     patient.alive = False
+                # Mild patients die after 15 steps without care
+                elif patient.severity == PatientSeverity.mild and patient.steps_without_care >= 15:
+                    patient.alive = False
 
         # Free up doctors whose patients are now stable (assigned to hospital)
         for doctor in self.state.doctors:
