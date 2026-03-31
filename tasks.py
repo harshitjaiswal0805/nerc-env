@@ -45,9 +45,10 @@ TASKS = {
             {"id": "p6", "severity": "mild"},
         ],
         "hospitals": [
-            {"id": "h1", "icu_capacity": 2, "current_patients": 0},
-            {"id": "h2", "icu_capacity": 3, "current_patients": 0},
+            {"id": "h1", "icu_capacity": 3, "current_patients": 0},
+            {"id": "h2", "icu_capacity": 4, "current_patients": 0},
         ],
+    
         "ambulances": [
             {"id": "a1", "status": "available"},
             {"id": "a2", "status": "available"},
@@ -83,9 +84,9 @@ TASKS = {
             {"id": "p10", "severity": "mild",     "rescued": False},
         ],
         "hospitals": [
-            {"id": "h1", "icu_capacity": 3, "current_patients": 0},
-            {"id": "h2", "icu_capacity": 3, "current_patients": 0},
-            {"id": "h3", "icu_capacity": 2, "current_patients": 0},
+            {"id": "h1", "icu_capacity": 4, "current_patients": 0},
+            {"id": "h2", "icu_capacity": 4, "current_patients": 0},
+            {"id": "h3", "icu_capacity": 3, "current_patients": 0},
         ],
         "ambulances": [
             {"id": "a1", "status": "available"},
