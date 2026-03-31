@@ -56,8 +56,10 @@ NERC-Env simulates two real-world emergency scenarios:
 |------|-------|
 | task_1 | 0.9933 |
 | task_2 | 0.9900 |
-| task_3 | 0.9910 |
-| **Average** | **0.9914** |
+| task_3 | 0.9860 |
+| task_4 | 0.9913 |
+| task_5 | 1.0000 |
+| **Average** | **0.9921** |
 
 ## API Endpoints
 
