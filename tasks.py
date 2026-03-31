@@ -165,7 +165,7 @@ TASKS = {
     # Hardest task — tests true multi-objective optimization.
     "task_5": {
         "mode": Mode.disaster,
-        "time_limit": 45,
+        "time_limit": 55,
         "description": "Simultaneous emergencies in 3 cities. Coordinate across limited resources.",
         "difficulty": "expert",
         "patients": [
