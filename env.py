@@ -83,6 +83,7 @@ class NERCEnv:
                     ambulance.status = AmbulanceStatus.dispatched
                     ambulance.assigned_patient = action.patient_id
                     patient.assigned_hospital = action.hospital_id
+                    patient.steps_without_care = 0
                     hospital.current_patients += 1
 
         elif action.action_type == "transfer_patient":
@@ -115,7 +116,7 @@ class NERCEnv:
         self.state.time_left -= 1
         for patient in self.state.patients:
             if patient.alive:
-                if patient.assigned_doctor is None:
+                if patient.assigned_doctor is None and patient.assigned_hospital is None:
                     patient.steps_without_care += 1
                 # Critical patients die after 5 steps without care
                 if patient.severity == PatientSeverity.critical and patient.steps_without_care >= 5:
