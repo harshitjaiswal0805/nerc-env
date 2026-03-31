@@ -165,7 +165,7 @@ TASKS = {
     # Hardest task — tests true multi-objective optimization.
     "task_5": {
         "mode": Mode.disaster,
-        "time_limit": 55,
+        "time_limit": 65,
         "description": "Simultaneous emergencies in 3 cities. Coordinate across limited resources.",
         "difficulty": "expert",
         "patients": [
@@ -204,10 +204,12 @@ TASKS = {
             {"id": "d2", "specialty": "emergency",  "status": "available"},
             {"id": "d3", "specialty": "emergency",  "status": "available"},
             {"id": "d4", "specialty": "emergency",  "status": "available"},
-            {"id": "d5", "specialty": "surgery",    "status": "available"},
+            {"id": "d5", "specialty": "emergency",  "status": "available"},
             {"id": "d6", "specialty": "surgery",    "status": "available"},
-            {"id": "d7", "specialty": "general",    "status": "available"},
+            {"id": "d7", "specialty": "surgery",    "status": "available"},
             {"id": "d8", "specialty": "general",    "status": "available"},
+            {"id": "d9", "specialty": "general",    "status": "available"},
+            {"id": "d10","specialty": "general",    "status": "available"},
         ],
         "rescue_teams": [
             {"id": "r1", "status": "available"},
