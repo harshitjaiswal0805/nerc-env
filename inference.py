@@ -157,23 +157,43 @@ def run_episode(task_id: str) -> dict:
                 f"{BASE_URL}/step",
                 json={"action": action}
             ).json()
-            obs         = step_res["observation"]
-            reward      = step_res["reward"]
-            done        = step_res["done"]
+
+            # handle both response formats safely
+            if "observation" in step_res:
+                obs         = step_res["observation"]
+                reward      = step_res.get("reward", 0)
+                done        = step_res.get("done", False)
+            elif "detail" in step_res:
+                print(f"  Server error: {step_res['detail']}")
+                break
+            else:
+                print(f"  Unexpected response: {step_res}")
+                break
+
             total_reward += reward
             steps += 1
             print(f"  Step {steps}: action={action.get('action_type')} reward={reward}")
+
         except Exception as e:
             print(f"  Step error: {e}")
             break
 
-    grade = requests.post(f"{BASE_URL}/grader").json()
+    # get final grade — works even if episode not fully done
+    try:
+        grade_res = requests.post(f"{BASE_URL}/grader").json()
+        grade = grade_res.get("score", 0.0)
+        summary = grade_res.get("summary", "no summary")
+    except Exception as e:
+        print(f"  Grader error: {e}")
+        grade = 0.0
+        summary = "grader failed"
+
     return {
         "task_id":      task_id,
         "steps":        steps,
         "total_reward": round(total_reward, 2),
-        "grade":        grade["score"],
-        "summary":      grade["summary"]
+        "grade":        grade,
+        "summary":      summary
     }
 
 
