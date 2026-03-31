@@ -88,7 +88,7 @@ class NERCEnv:
         elif action.action_type == "transfer_patient":
             patient = self._get_patient(action.patient_id)
             new_hospital = self._get_hospital(action.hospital_id)
-            if patient and new_hospital and new_hospital.has_capacity:
+            if patient and new_hospital and new_hospital.current_patients < new_hospital.icu_capacity:
                 old_hospital = self._get_hospital(patient.assigned_hospital)
                 if old_hospital:
                     old_hospital.current_patients -= 1
