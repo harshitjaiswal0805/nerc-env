@@ -168,6 +168,7 @@ def compute_reward(state: EnvState, action: Action) -> Tuple[float, str]:
             elif patient.severity == PatientSeverity.moderate and patient.steps_without_care == 6:
                 reward -= 8.0
                 reasons.append(f"patient {patient.id} died — moderate neglect (-8)")
+    return round(reward, 2), " | ".join(reasons) if reasons else "no effect"
 # ─── Lookup helpers ────────────────────────────────────────────────────────────
 
 def _get_patient(state, pid):
