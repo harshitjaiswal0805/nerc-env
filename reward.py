@@ -148,22 +148,26 @@ def compute_reward(state: EnvState, action: Action) -> Tuple[float, str]:
             reasons.append("wait with no critical patients pending (0)")
 
     # ─── Passive penalties applied every step ─────────────────────────────────
+    # ─── Passive penalties applied every step ─────────────────────────────────
     for patient in state.patients:
         if patient.alive:
-            if patient.severity == PatientSeverity.critical and patient.steps_without_care >= 2:
-                reward -= 2.0
-                reasons.append(f"patient {patient.id} critical and neglected (-2)")
-            if patient.severity == PatientSeverity.moderate and patient.steps_without_care >= 4:
-                reward -= 1.0
-                reasons.append(f"patient {patient.id} moderate and neglected (-1)")
+            # only penalize if patient is NOT yet in a hospital
+            if patient.assigned_hospital is None:
+                if patient.severity == PatientSeverity.critical and patient.steps_without_care >= 2:
+                    reward -= 2.0
+                    reasons.append(f"patient {patient.id} critical and neglected (-2)")
+                if patient.severity == PatientSeverity.moderate and patient.steps_without_care >= 4:
+                    reward -= 1.0
+                    reasons.append(f"patient {patient.id} moderate and neglected (-1)")
 
         if not patient.alive:
-            reward -= 8.0
-            reasons.append(f"patient {patient.id} is dead (-8)")
-
-    return round(reward, 2), " | ".join(reasons) if reasons else "no effect"
-
-
+            # only penalize death once — when steps_without_care just hit the limit
+            if patient.severity == PatientSeverity.critical and patient.steps_without_care == 3:
+                reward -= 8.0
+                reasons.append(f"patient {patient.id} died — critical neglect (-8)")
+            elif patient.severity == PatientSeverity.moderate and patient.steps_without_care == 6:
+                reward -= 8.0
+                reasons.append(f"patient {patient.id} died — moderate neglect (-8)")
 # ─── Lookup helpers ────────────────────────────────────────────────────────────
 
 def _get_patient(state, pid):
