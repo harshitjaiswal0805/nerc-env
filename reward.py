@@ -156,7 +156,7 @@ def compute_reward(state: EnvState, action: Action) -> Tuple[float, str]:
                 if patient.severity == PatientSeverity.critical and patient.steps_without_care >= 2:
                     reward -= 2.0
                     reasons.append(f"patient {patient.id} critical and neglected (-2)")
-                if patient.severity == PatientSeverity.moderate and patient.steps_without_care >= 4:
+                if patient.severity == PatientSeverity.moderate and patient.steps_without_care >= 6:
                     reward -= 1.0
                     reasons.append(f"patient {patient.id} moderate and neglected (-1)")
 
