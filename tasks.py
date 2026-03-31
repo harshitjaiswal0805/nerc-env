@@ -113,7 +113,7 @@ TASKS = {
     # higher than earthquake — rescue teams have limited window.
     "task_4": {
         "mode": Mode.disaster,
-        "time_limit": 20,
+        "time_limit": 30,
         "description": "Flood disaster with rising water. Rescue critical patients before zones are cut off.",
         "difficulty": "hard",
         "patients": [
@@ -165,7 +165,7 @@ TASKS = {
     # Hardest task — tests true multi-objective optimization.
     "task_5": {
         "mode": Mode.disaster,
-        "time_limit": 35,
+        "time_limit": 45,
         "description": "Simultaneous emergencies in 3 cities. Coordinate across limited resources.",
         "difficulty": "expert",
         "patients": [
