@@ -40,7 +40,7 @@ Prioritize critical patients. Avoid ICU overflow."""
 
 def get_rule_based_action(obs: dict) -> dict:
     """
-    Improved rule-based agent — fixes ICU overflow bug.
+    Improved rule-based agent — strictly checks capacity before dispatching.
     """
     patients   = obs.get("patients", [])
     doctors    = obs.get("doctors", [])
@@ -53,37 +53,29 @@ def get_rule_based_action(obs: dict) -> dict:
     available_rescue     = [r for r in rescue      if r["status"] == "available"]
     alive_patients       = [p for p in patients    if p["alive"]]
 
-    # hospitals with space available
+    # strictly only hospitals with remaining space
     hospitals_with_space = [
         h for h in hospitals
         if h["current_patients"] < h["icu_capacity"]
     ]
 
-    # patients not yet in a hospital
-    unallocated_patients = [
+    # patients not yet allocated to any hospital
+    unallocated = [
         p for p in alive_patients
         if p["assigned_hospital"] is None
     ]
 
-    # patients without a doctor
-    unattended_critical = [
-        p for p in alive_patients
-        if p["severity"] == "critical" and p["assigned_doctor"] is None
-    ]
-    unattended_moderate = [
-        p for p in alive_patients
-        if p["severity"] == "moderate" and p["assigned_doctor"] is None
-    ]
+    # priority 1: assign doctor to critical patient
+    for p in alive_patients:
+        if p["severity"] == "critical" and p["assigned_doctor"] is None:
+            if available_doctors:
+                return {
+                    "action_type": "assign_doctor",
+                    "patient_id": p["id"],
+                    "doctor_id": available_doctors[0]["id"]
+                }
 
-    # Priority 1: assign doctor to critical patient immediately
-    if unattended_critical and available_doctors:
-        return {
-            "action_type": "assign_doctor",
-            "patient_id": unattended_critical[0]["id"],
-            "doctor_id": available_doctors[0]["id"]
-        }
-
-    # Priority 2: dispatch rescue teams in disaster mode
+    # priority 2: dispatch rescue teams
     if available_rescue:
         unrescued = [p for p in alive_patients if not p["rescued"]]
         if unrescued:
@@ -93,15 +85,15 @@ def get_rule_based_action(obs: dict) -> dict:
                 "location": "disaster_zone"
             }
 
-    # Priority 3: dispatch ambulance — ONLY if hospital has space
-    if unallocated_patients and available_ambulances and hospitals_with_space:
-        # sort patients by severity — critical first
+    # priority 3: dispatch ambulance ONLY if hospital has space AND patient not yet allocated
+    if unallocated and available_ambulances and hospitals_with_space:
+        # sort by severity
         priority_order = {"critical": 0, "moderate": 1, "mild": 2}
         unallocated_sorted = sorted(
-            unallocated_patients,
+            unallocated,
             key=lambda p: priority_order.get(p["severity"], 3)
         )
-        # pick hospital with most space to avoid overflow
+        # pick hospital with most space
         best_hospital = max(
             hospitals_with_space,
             key=lambda h: h["icu_capacity"] - h["current_patients"]
@@ -113,29 +105,25 @@ def get_rule_based_action(obs: dict) -> dict:
             "hospital_id": best_hospital["id"]
         }
 
-    # Priority 4: assign doctor to moderate patient
-    if unattended_moderate and available_doctors:
-        return {
-            "action_type": "assign_doctor",
-            "patient_id": unattended_moderate[0]["id"],
-            "doctor_id": available_doctors[0]["id"]
-        }
+    # priority 4: assign doctor to moderate patient
+    for p in alive_patients:
+        if p["severity"] == "moderate" and p["assigned_doctor"] is None:
+            if available_doctors:
+                return {
+                    "action_type": "assign_doctor",
+                    "patient_id": p["id"],
+                    "doctor_id": available_doctors[0]["id"]
+                }
 
-    # Priority 5: transfer patients from full hospitals to ones with space
-    if hospitals_with_space:
-        full_hospitals = [
-            h for h in hospitals
-            if h["current_patients"] >= h["icu_capacity"]
-        ]
-        if full_hospitals:
-            # find a patient in a full hospital
-            for p in alive_patients:
-                if p["assigned_hospital"] in [h["id"] for h in full_hospitals]:
-                    return {
-                        "action_type": "transfer_patient",
-                        "patient_id": p["id"],
-                        "hospital_id": hospitals_with_space[0]["id"]
-                    }
+    # priority 5: assign doctor to mild patient
+    for p in alive_patients:
+        if p["severity"] == "mild" and p["assigned_doctor"] is None:
+            if available_doctors:
+                return {
+                    "action_type": "assign_doctor",
+                    "patient_id": p["id"],
+                    "doctor_id": available_doctors[0]["id"]
+                }
 
     return {"action_type": "wait"}
 
