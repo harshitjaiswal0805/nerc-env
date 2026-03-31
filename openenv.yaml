@@ -30,7 +30,19 @@ tasks:
   - id: task_3
     difficulty: hard
     description: Earthquake with 10 casualties. Rescue, triage and allocate under tight capacity.
-    time_limit: 25
+    time_limit: 30
+    score_range: [0.0, 1.0]
+
+  - id: task_4
+    difficulty: hard
+    description: Flood disaster with rising water. Rescue critical patients before zones are cut off.
+    time_limit: 20
+    score_range: [0.0, 1.0]
+
+  - id: task_5
+    difficulty: expert
+    description: Simultaneous emergencies in 3 cities. Coordinate across limited resources.
+    time_limit: 35
     score_range: [0.0, 1.0]
 
 observation:
