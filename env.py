@@ -79,7 +79,7 @@ class NERCEnv:
             ambulance = self._get_ambulance(action.ambulance_id)
             hospital = self._get_hospital(action.hospital_id)
             if patient and ambulance and hospital:
-                if ambulance.status == AmbulanceStatus.available and hospital.has_capacity:
+                if ambulance.status == AmbulanceStatus.available and hospital.current_patients < hospital.icu_capacity:
                     ambulance.status = AmbulanceStatus.dispatched
                     ambulance.assigned_patient = action.patient_id
                     patient.assigned_hospital = action.hospital_id

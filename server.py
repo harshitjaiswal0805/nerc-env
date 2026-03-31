@@ -133,49 +133,90 @@ def baseline():
 def _rule_based_agent(obs):
     from models import Action
 
-    # Priority 1: assign doctors to critical patients first
-    for patient in obs.patients:
-        if patient.alive and patient.severity == "critical" and patient.assigned_doctor is None:
-            for doctor in obs.doctors:
-                if doctor.status == "available":
-                    return Action(
-                        action_type="assign_doctor",
-                        patient_id=patient.id,
-                        doctor_id=doctor.id
-                    )
+    patients   = obs.patients
+    doctors    = obs.doctors
+    ambulances = obs.ambulances
+    hospitals  = obs.hospitals
+    rescue     = obs.rescue_teams
 
-    # Priority 2: dispatch rescue teams (disaster mode)
-    for team in obs.rescue_teams:
-        if team.status == "available":
+    available_doctors    = [d for d in doctors    if d.status == "available"]
+    available_ambulances = [a for a in ambulances if a.status == "available"]
+    available_rescue     = [r for r in rescue      if r.status == "available"]
+    alive_patients       = [p for p in patients    if p.alive]
+
+    # hospitals with space
+    hospitals_with_space = [
+        h for h in hospitals
+        if h.current_patients < h.icu_capacity
+    ]
+
+    # unallocated alive patients
+    unallocated = [
+        p for p in alive_patients
+        if p.assigned_hospital is None
+    ]
+
+    # priority 1: assign doctor to critical patient
+    for p in alive_patients:
+        if p.severity == "critical" and p.assigned_doctor is None:
+            if available_doctors:
+                return Action(
+                    action_type="assign_doctor",
+                    patient_id=p.id,
+                    doctor_id=available_doctors[0].id
+                )
+
+    # priority 2: dispatch rescue teams
+    if available_rescue:
+        unrescued = [p for p in alive_patients if not p.rescued]
+        if unrescued:
             return Action(
                 action_type="dispatch_rescue",
-                rescue_team_id=team.id,
+                rescue_team_id=available_rescue[0].id,
                 location="disaster_zone"
             )
 
-    # Priority 3: dispatch ambulances to unallocated patients
-    for patient in obs.patients:
-        if patient.alive and patient.assigned_hospital is None:
-            for amb in obs.ambulances:
-                if amb.status == "available":
-                    for hospital in obs.hospitals:
-                        if hospital.has_capacity:
-                            return Action(
-                                action_type="dispatch_ambulance",
-                                patient_id=patient.id,
-                                ambulance_id=amb.id,
-                                hospital_id=hospital.id
-                            )
+    # priority 3: dispatch ambulance ONLY to hospital with space
+    if unallocated and available_ambulances and hospitals_with_space:
+        priority_order = {"critical": 0, "moderate": 1, "mild": 2}
+        unallocated_sorted = sorted(
+            unallocated,
+            key=lambda p: priority_order.get(p.severity, 3)
+        )
+        # pick hospital with most remaining space
+        best_hospital = max(
+            hospitals_with_space,
+            key=lambda h: h.icu_capacity - h.current_patients
+        )
+        return Action(
+            action_type="dispatch_ambulance",
+            patient_id=unallocated_sorted[0].id,
+            ambulance_id=available_ambulances[0].id,
+            hospital_id=best_hospital.id
+        )
 
-    # Priority 4: assign doctors to moderate patients
-    for patient in obs.patients:
-        if patient.alive and patient.severity == "moderate" and patient.assigned_doctor is None:
-            for doctor in obs.doctors:
-                if doctor.status == "available":
-                    return Action(
-                        action_type="assign_doctor",
-                        patient_id=patient.id,
-                        doctor_id=doctor.id
-                    )
+    # priority 4: assign doctor to moderate patient
+    for p in alive_patients:
+        if p.severity == "moderate" and p.assigned_doctor is None:
+            if available_doctors:
+                return Action(
+                    action_type="assign_doctor",
+                    patient_id=p.id,
+                    doctor_id=available_doctors[0].id
+                )
+
+    # priority 5: transfer from full hospital to one with space
+    if hospitals_with_space:
+        full_hospital_ids = [
+            h.id for h in hospitals
+            if h.current_patients >= h.icu_capacity
+        ]
+        for p in alive_patients:
+            if p.assigned_hospital in full_hospital_ids:
+                return Action(
+                    action_type="transfer_patient",
+                    patient_id=p.id,
+                    hospital_id=hospitals_with_space[0].id
+                )
 
     return Action(action_type="wait")
