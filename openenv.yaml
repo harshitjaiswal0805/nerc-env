@@ -1,0 +1,72 @@
+name: NERC-Env
+version: 1.0.0
+description: National Emergency Response & Care Environment for training AI agents on real-world emergency triage and disaster response tasks.
+author: harshitjaiswal08
+
+environment:
+  mode: http
+  base_url: https://harshitjaiswal08-nerc-env.hf.space
+  endpoints:
+    reset: POST /reset
+    step: POST /step
+    state: GET /state
+    tasks: GET /tasks
+    grader: POST /grader
+    baseline: POST /baseline
+
+tasks:
+  - id: task_1
+    difficulty: easy
+    description: Triage 3 patients with limited doctors. Prioritize critical cases.
+    time_limit: 15
+    score_range: [0.0, 1.0]
+
+  - id: task_2
+    difficulty: medium
+    description: Distribute 6 patients across 2 hospitals. Avoid ICU overflow.
+    time_limit: 20
+    score_range: [0.0, 1.0]
+
+  - id: task_3
+    difficulty: hard
+    description: Earthquake with 10 casualties. Rescue, triage and allocate under tight capacity.
+    time_limit: 25
+    score_range: [0.0, 1.0]
+
+observation:
+  type: object
+  fields:
+    mode: string
+    patients: list
+    hospitals: list
+    ambulances: list
+    doctors: list
+    rescue_teams: list
+    time_left: integer
+    last_reward: float
+    done: boolean
+
+action:
+  type: object
+  fields:
+    action_type:
+      type: string
+      enum: [assign_doctor, dispatch_ambulance, transfer_patient, dispatch_rescue, prioritize_patient, wait]
+    patient_id: string
+    doctor_id: string
+    ambulance_id: string
+    hospital_id: string
+    rescue_team_id: string
+    location: string
+
+reward:
+  range: [-10, 10]
+  shaped: true
+  description: Rewards are given at every step based on patient outcomes, allocation efficiency, and response time.
+
+tags:
+  - openenv
+  - healthcare
+  - emergency-response
+  - disaster-management
+  - reinforcement-learning
