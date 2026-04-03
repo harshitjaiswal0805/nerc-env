@@ -61,7 +61,7 @@ Scores from the built-in rule-based baseline agent:
 | task_3 | 0.9910 | 10/10 | 3/3 |
 | task_4 | 0.9913 | 12/12 | 4/4 |
 | task_5 | 1.0000 | 15/15 | 5/5 |
-| **Average** | **0.9921** | | |
+| **Average** | **0.9931** | | |
 
 ---
 
