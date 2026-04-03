@@ -1,2 +1,0 @@
-nerc_env
-venv

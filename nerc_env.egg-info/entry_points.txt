@@ -1,2 +1,0 @@
-[console_scripts]
-server = nerc_env.app:main
