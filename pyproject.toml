@@ -23,7 +23,7 @@ dependencies = [
 ]
 
 [project.scripts]
-server = "nerc_env.app:main"
+server = "server.app:main"
 
 [tool.openenv]
 server_module = "nerc_env.app"
