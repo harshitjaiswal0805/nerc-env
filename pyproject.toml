@@ -25,6 +25,9 @@ dependencies = [
 [project.scripts]
 server = "nerc_env.app:main"
 
+[tool.openenv]
+server_module = "nerc_env.app"
+
 [tool.setuptools.packages.find]
 where = ["."]
 
