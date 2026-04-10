@@ -5,20 +5,24 @@ from typing import List, Optional
 from openai import OpenAI
 
 # ─── Required environment variables ──────────────────────────────────────────
-API_BASE_URL = os.getenv("API_BASE_URL", "https://router.huggingface.co/v1")
-MODEL_NAME   = os.getenv("MODEL_NAME",   "Qwen/Qwen2.5-72B-Instruct")
-HF_TOKEN     = os.getenv("HF_TOKEN",     "")
+API_BASE_URL = os.getenv("API_BASE_URL", "https://api.openai.com/v1")
+MODEL_NAME   = os.getenv("MODEL_NAME",   "gpt-4o-mini")
+HF_TOKEN     = os.getenv("HF_TOKEN")
 BASE_URL     = os.getenv("NERC_ENV_URL", "http://localhost:7860")
 
-BENCHMARK    = "nerc-env"
-MAX_STEPS    = 50
-TEMPERATURE  = 0.2
-MAX_TOKENS   = 300
+# ─── Validate HF_TOKEN (mandatory per guidelines) ────────────────────────────
+if HF_TOKEN is None:
+    raise ValueError("HF_TOKEN environment variable is required")
+
+BENCHMARK = "nerc-env"
+MAX_STEPS = 50
+TEMPERATURE = 0.2
+MAX_TOKENS = 300
 SUCCESS_SCORE_THRESHOLD = 0.5
 
 # ─── OpenAI client ────────────────────────────────────────────────────────────
 client = OpenAI(
-    api_key=HF_TOKEN or "no-key",
+    api_key=HF_TOKEN,
     base_url=API_BASE_URL
 )
 
@@ -40,7 +44,6 @@ Only include fields relevant to your chosen action_type.
 Prioritize critical patients. Avoid ICU overflow. Save as many lives as possible."""
 
 # ─── Mandatory log functions ──────────────────────────────────────────────────
-
 def log_start(task: str, env: str, model: str) -> None:
     print(f"[START] task={task} env={env} model={model}", flush=True)
 
@@ -53,36 +56,34 @@ def log_end(success: bool, steps: int, score: float, rewards: List[float]) -> No
     rewards_str = ",".join(f"{r:.2f}" for r in rewards)
     print(f"[END] success={str(success).lower()} steps={steps} score={score:.3f} rewards={rewards_str}", flush=True)
 
-# ─── LLM + fallback agent ─────────────────────────────────────────────────────
-
+# ─── LLM agent ────────────────────────────────────────────────────────────────
 def get_action_from_llm(obs: dict) -> dict:
-    if HF_TOKEN:
-        try:
-            prompt = f"Current environment state:\n{json.dumps(obs, indent=2)}\n\nWhat action should be taken? Respond with a single JSON action object only."
-            import time
-            for attempt in range(3):
-                try:
-                    response = client.chat.completions.create(
-                        model=MODEL_NAME,
-                        messages=[
-                            {"role": "system", "content": SYSTEM_PROMPT},
-                            {"role": "user",   "content": prompt}
-                        ],
-                        temperature=TEMPERATURE,
-                        max_tokens=MAX_TOKENS,
-                        stream=False,
-                    )
-                    raw = response.choices[0].message.content.strip()
-                    if "```" in raw:
-                        raw = raw.split("```")[1].replace("json", "").strip()
-                    return json.loads(raw)
-                except Exception as e:
-                    if "429" in str(e) and attempt < 2:
-                        time.sleep(45 * (attempt + 1))
-                    else:
-                        raise e
-        except Exception as e:
-            print(f"[DEBUG] LLM error: {e} — using rule-based agent", flush=True)
+    try:
+        prompt = f"Current environment state:\n{json.dumps(obs, indent=2)}\n\nWhat action should be taken? Respond with a single JSON action object only."
+        import time
+        for attempt in range(3):
+            try:
+                response = client.chat.completions.create(
+                    model=MODEL_NAME,
+                    messages=[
+                        {"role": "system", "content": SYSTEM_PROMPT},
+                        {"role": "user",   "content": prompt}
+                    ],
+                    temperature=TEMPERATURE,
+                    max_tokens=MAX_TOKENS,
+                    stream=False,
+                )
+                raw = response.choices[0].message.content.strip()
+                if "```" in raw:
+                    raw = raw.split("```")[1].replace("json", "").strip()
+                return json.loads(raw)
+            except Exception as e:
+                if "429" in str(e) and attempt < 2:
+                    time.sleep(45 * (attempt + 1))
+                else:
+                    raise e
+    except Exception as e:
+        print(f"[DEBUG] LLM error: {e} — using rule-based agent", flush=True)
     return get_rule_based_action(obs)
 
 def get_rule_based_action(obs: dict) -> dict:
@@ -125,11 +126,10 @@ def get_rule_based_action(obs: dict) -> dict:
     return {"action_type": "wait"}
 
 # ─── Episode runner ───────────────────────────────────────────────────────────
-
 def run_episode(task_id: str) -> dict:
     log_start(task=task_id, env=BENCHMARK, model=MODEL_NAME)
 
-    rewards     : List[float] = []
+    rewards: List[float] = []
     steps_taken = 0
     score       = 0.0
     success     = False
@@ -143,9 +143,9 @@ def run_episode(task_id: str) -> dict:
             if done:
                 break
 
-            action = get_action_from_llm(obs)
+            action     = get_action_from_llm(obs)
             action_str = json.dumps(action)
-            error = None
+            error      = None
 
             try:
                 step_res = requests.post(
@@ -158,7 +158,7 @@ def run_episode(task_id: str) -> dict:
                     reward = float(step_res.get("reward", 0))
                     done   = bool(step_res.get("done", False))
                 elif "detail" in step_res:
-                    error = step_res["detail"]
+                    error  = step_res["detail"]
                     reward = 0.0
                 else:
                     reward = 0.0
@@ -174,12 +174,11 @@ def run_episode(task_id: str) -> dict:
             if done:
                 break
 
-        # get final grade
         try:
             grade_res = requests.post(f"{BASE_URL}/grader").json()
             score     = float(grade_res.get("score", 0.0))
         except Exception:
-            score = sum(rewards) / len(rewards) if rewards else 0.0
+            score = 0.0
 
         success = score >= SUCCESS_SCORE_THRESHOLD
 
@@ -189,14 +188,12 @@ def run_episode(task_id: str) -> dict:
     return {"task_id": task_id, "score": score, "steps": steps_taken, "success": success}
 
 # ─── Main ─────────────────────────────────────────────────────────────────────
-
 def main():
     tasks   = ["task_1", "task_2", "task_3", "task_4", "task_5"]
     results = []
     for task_id in tasks:
         result = run_episode(task_id)
         results.append(result)
-
     avg = sum(r["score"] for r in results) / len(results)
     print(f"\n[SUMMARY] average_score={avg:.4f}", flush=True)
 
