@@ -83,7 +83,7 @@ def get_action_from_llm(obs: dict) -> dict:
                 else:
                     raise e
     except Exception as e:
-        print(f"[DEBUG] LLM error: {e} — using rule-based agent", flush=True)
+        import sys; print(f"[DEBUG] LLM error: {e} — using rule-based agent", file=sys.stderr, flush=True)
     return get_rule_based_action(obs)
 
 def get_rule_based_action(obs: dict) -> dict:
