@@ -86,7 +86,7 @@ def grade_episode(state: EnvState) -> Dict:
     if len(dead) > total / 2:
         final_score = min(final_score, 0.3)
 
-    final_score = round(max(0.0, min(1.0, final_score)), 4)
+    final_score = round(max(0.001, min(0.999, final_score)), 4)
 
     breakdown = {
         "survival_score":   round(survival_score,   4),
